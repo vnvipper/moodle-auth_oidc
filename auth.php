@@ -25,6 +25,7 @@ defined('MOODLE_INTERNAL') || die();
 
 require_once($CFG->libdir.'/authlib.php');
 require_once($CFG->dirroot.'/login/lib.php');
+require_once($CFG->libdir.'/accesslib.php');
 
 /**
  * OpenID Connect Authentication Plugin.
@@ -308,5 +309,60 @@ class auth_plugin_oidc extends \auth_plugin_base {
         }
 
         return true;
+    }
+
+    /**
+     * Sync roles for this user.
+     *
+     * @param object $user The user to sync (without system magic quotes).
+     */
+    public function sync_roles($user) {
+        global $DB;
+        $systemcontext = context_system::instance();
+        $config = get_config('auth_oidc');
+
+        $tokenrec = $DB->get_record('auth_oidc_token', ['userid' => $user->id]);
+        if (empty($tokenrec)) {
+            \auth_oidc\utils::debug('OIDC token does not exist, skip role sync.', 'oidcclient::sync_roles');
+        }
+
+        $idtoken = \auth_oidc\jwt::instance_from_encoded($tokenrec->idtoken);
+
+        $systemroles = role_fix_names(get_all_roles(), $systemcontext, ROLENAME_ORIGINAL);;
+
+        $debugdata = [
+            'role' => $systemroles,
+            'userid' => $user->id,
+            'idtoken' => $idtoken,
+        ];
+        \auth_oidc\utils::debug('Synchorizing roles', 'oidcclient::sync_roles', $debugdata);
+
+        foreach ($systemroles as $role) {
+            
+            
+            $isrole = $this->is_role($idtoken, $role, $config);
+
+            // Sync user.
+            if ($isrole) {
+                // Following calls will not create duplicates.
+                role_assign($role->id, $user->id, $systemcontext->id, 'auth_oidc');
+            } else {
+                // Unassign only if previously assigned by this plugin.
+                role_unassign($role->id, $user->id, $systemcontext->id, 'auth_oidc');
+            }
+        }
+    }
+
+    private function is_role($idtoken, $role, $config) {
+        $groups = $idtoken->claim($config->roleclaimname);
+        $roleShortName = $role->shortname;
+
+        foreach ($groups as $group) {
+            if ($group == $roleShortName) {
+                return true;
+            }
+        }
+        
+        return false;
     }
 }
