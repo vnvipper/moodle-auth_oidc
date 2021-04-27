@@ -312,7 +312,7 @@ class auth_plugin_oidc extends \auth_plugin_base {
         $systemcontext = context_system::instance();
         $config = get_config('auth_oidc');
 
-        $tokenrec = $DB->get_record('auth_oidc_token', ['userid' => $user->id]);
+        $tokenrec = $DB->get_record('auth_oidc_token', ['username' => $user->username]);
         if (empty($tokenrec)) {
             \auth_oidc\utils::debug('OIDC token does not exist, skip role sync.', 'oidcclient::sync_roles');
         }
@@ -346,6 +346,10 @@ class auth_plugin_oidc extends \auth_plugin_base {
 
     private function is_role($idtoken, $role, $config) {
         $groups = $idtoken->claim($config->roleclaimname);
+        if (!is_array($groups)) {
+            return false;
+        }
+
         $roleShortName = $role->shortname;
 
         foreach ($groups as $group) {
