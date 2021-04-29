@@ -210,6 +210,9 @@ class authcode extends \auth_oidc\loginflow\base {
 
         // Decode and verify idtoken.
         list($oidcuniqid, $idtoken) = $this->process_idtoken($tokenparams['id_token'], $orignonce);
+        if (isset($idtoken)) {
+          $SESSION->session_state = $idtoken->claim('session_state');
+        }
 
         // Check restrictions.
         $passed = $this->checkrestrictions($idtoken);

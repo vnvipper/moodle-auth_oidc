@@ -46,6 +46,14 @@ $configdesc = new lang_string('cfg_tokenendpoint_desc', 'auth_oidc');
 $configdefault = 'https://login.microsoftonline.com/common/oauth2/token';
 $settings->add(new admin_setting_configtext('auth_oidc/tokenendpoint', $configkey, $configdesc, $configdefault, PARAM_TEXT));
 
+$configkey = new lang_string('cfg_oauthorigin_key', 'auth_oidc');
+$configdesc = new lang_string('cfg_oauthorigin_desc', 'auth_oidc');
+$settings->add(new admin_setting_configtext('auth_oidc/oauthorigin', $configkey, $configdesc, '', PARAM_TEXT));
+
+$configkey = new lang_string('cfg_sessioncheckendpoint_key', 'auth_oidc');
+$configdesc = new lang_string('cfg_sessioncheckendpoint_desc', 'auth_oidc');
+$settings->add(new admin_setting_configtext('auth_oidc/sessioncheckendpoint', $configkey, $configdesc, '', PARAM_TEXT));
+
 $configkey = new lang_string('cfg_roleclaimname_key', 'auth_oidc');
 $configdesc = new lang_string('cfg_roleclaimname_desc', 'auth_oidc');
 $configdefault = 'group';
