@@ -89,9 +89,10 @@ function auth_oidc_connectioncapability($userid, $mode = 'connect', $require = f
 }
 
 function auth_oidc_before_footer() {
+    global $USER;
     $oauth_origin = get_config('auth_oidc', 'oauthorigin');
     $session_check_endpoint = get_config('auth_oidc', 'sessioncheckendpoint');
-    $logouturl = get_config('auth_oidc', 'logouturi');
+    $logouturl = isset($USER->sesskey) ? '/login/logout.php?sesskey=' . $USER->sesskey : '';
     $client_id = get_config('auth_oidc', 'clientid');
     $session_state = isset($_SESSION['session_state']) ? $_SESSION['session_state'] : '';
     if (isloggedin() && !isguestuser() && !empty($session_state)) {
