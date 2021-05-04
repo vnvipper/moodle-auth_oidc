@@ -89,12 +89,12 @@ function auth_oidc_connectioncapability($userid, $mode = 'connect', $require = f
 }
 
 function auth_oidc_before_footer() {
-    global $SESSION;
     $oauth_origin = get_config('auth_oidc', 'oauthorigin');
     $session_check_endpoint = get_config('auth_oidc', 'sessioncheckendpoint');
     $logouturl = get_config('auth_oidc', 'logouturi');
     $client_id = get_config('auth_oidc', 'clientid');
-    $session_state = isset($SESSION->session_state) ? $SESSION->session_state : '';
+    $session_state = isset($_SESSION['session_state']) ? $_SESSION['session_state'] : '';
+    if (isloggedin() && !isguestuser() && !empty($session_state)) {
 ?>
     <iframe id="check-session-iframe" src="<?= $session_check_endpoint ?>" style="display: none"></iframe>
     <script>
@@ -124,10 +124,13 @@ function auth_oidc_before_footer() {
             }
         }
 
-        var session_state = "<?= $session_state ?>";
-        var client_id = "<?= $client_id ?>";
-        var iframe = document.getElementById("check-session-iframe");
-        trackUserLoginStatus(iframe, client_id, session_state, "<?= $oauth_origin ?>");
+        document.addEventListener('DOMContentLoaded', function(event) {
+            var session_state = "<?= $session_state ?>";
+            var client_id = "<?= $client_id ?>";
+            var iframe = document.getElementById("check-session-iframe");
+            trackUserLoginStatus(iframe, client_id, session_state, "<?= $oauth_origin ?>");
+        });
     </script>
 <?php
+    }
 }
